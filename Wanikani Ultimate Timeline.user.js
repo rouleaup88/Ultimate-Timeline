@@ -2,9 +2,10 @@
 // @name        Wanikani Ultimate Timeline 2
 // @namespace   Wanikani prouleau
 // @description Review schedule explorer for WaniKani
-// @version     8.1.0
+// @version     8.1.1
 // @match       https://www.wanikani.com/*
 // @match       https://preview.wanikani.com/*
+// @author      Robin Findley
 // @copyright   2018-2023, Robin Findley
 // @copyright   2025, Brian Shenk
 // @copyright   2025, prouleau
@@ -1262,21 +1263,19 @@ window.timeline = {};
         switch (e.type) {
             case 'mouseenter':
             case 'mouseover': {
-                let targetRect = e.target.getBoundingClientRect();
-                let parentRect = e.target.offsetParent?.getBoundingClientRect(); // For relative positioning
+                let target = e.target;
+                if (target.localName !== 'li') {target = target.parentElement;}; // parent is the li
+
+                let targetRect = target.getBoundingClientRect();
+                let parentRect = target.offsetParent?.getBoundingClientRect(); // For relative positioning
                 if (!parentRect) break;
 
                 let relativeTop = targetRect.top - parentRect.top;
-                info.style.top = `${relativeTop + e.target.offsetHeight + 3}px`;
+                info.style.top = `${relativeTop + target.offsetHeight + 3}px`;
                 // Uncomment the following two lines to move the box horizontally as well
                 // let relativeLeft = targetRect.left - parentRect.left;
                 // info.style.left = `${relativeLeft}px`;
 
-                let target = e.target;
-                if (customElements.get(target.localName)) {
-                    // target is a wk-character-image custom element. Must return to the enclosing li element
-                    target = target.parentElement;
-                };
                 let item = graph.current_bundle.items[Array.from(target.parentElement.children).indexOf(target)];
                 populate_item_info(info, item);
                 info.classList.remove('hidden');
@@ -1288,10 +1287,7 @@ window.timeline = {};
                 break;
             case 'click': {
                 let target = e.target;
-                if (customElements.get(target.localName)) {
-                    // target is a wk-character-image custom element. Must return to the enclosing li element
-                    target = target.parentElement;
-                };
+                if (target.localName !== 'li') {target = target.parentElement;}; // parent is the li
                 let item = graph.current_bundle.items[Array.from(target.parentElement.children).indexOf(target)];
                 let openInNewTab = Object.assign(document.createElement('a'), { target: '_blank', href: item.data.document_url});
                 openInNewTab.click();
@@ -1318,12 +1314,12 @@ window.timeline = {};
     function populate_item_info(info, item) {
         var html;
         switch (item.object) {
-            case 'radical':
+            case 'radical': {
                 if (item.data.characters !== null && item.data.characters !== '') {
                     html = '<span class="item">Radical: <span class="slug" lang="ja">'+item.data.characters+'</span></span><br>';
                 } else {
                     html = '<span class="item">Radical: <span class="slug" data-radname="'+item.data.slug+'">';
-                    var url = item.data.character_images.filter(function(img){
+                    let url = item.data.character_images.filter(function(img){
                         return (img.content_type === 'image/svg+xml' && img.metadata.inline_styles);
                     })[0]?.url;
                     if (!url) {
@@ -1334,7 +1330,7 @@ window.timeline = {};
                     html += '</span></span><br>';
                 }
                 break;
-
+            }
             case 'kanji':
                 html = '<span class="item">Kanji: <span class="slug" lang="ja">'+item.data.slug+'</span></span><br>';
                 html += get_important_reading(item)+'<br>';
@@ -1353,21 +1349,6 @@ window.timeline = {};
         html += 'Level: '+item.data.level+'<br>';
         html += 'SRS Level: '+item.assignments.srs_stage+' ('+srs_stages[item.assignments.srs_stage]+')';
         info.innerHTML = html;
-    }
-
-    //========================================================================
-    // Load a radical's svg file.
-    //-------------------------------------------------------------------
-    function load_radical_svg(item) {
-        var promise = graph.radical_cache[item.data.slug];
-        if (promise) return promise;
-        if (item.data.character_images.length === 0) return promise;
-        var url = item.data.character_images.filter(function(img){
-            return (img.content_type === 'image/svg+xml' && img.metadata.inline_styles);
-        })[0]?.url;
-        promise = wkof.load_file(url);
-        graph.radical_cache[item.data.slug] = promise;
-        return promise;
     }
 
     //========================================================================
