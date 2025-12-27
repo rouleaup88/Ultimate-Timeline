@@ -2,7 +2,7 @@
 // @name        Wanikani Ultimate Timeline 2
 // @namespace   Wanikani prouleau
 // @description Review schedule explorer for WaniKani
-// @version     8.1.1
+// @version     8.1.2
 // @match       https://www.wanikani.com/*
 // @match       https://preview.wanikani.com/*
 // @author      Robin Findley
@@ -164,7 +164,6 @@ window.timeline = {};
     //-------------------------------------------------------------------
     function startup() {
         install_css();
-        //install_menu_link();
         wkof.ready('document,ItemData,Menu,Settings')
         .then(install_menu_link)
         .then(load_settings)
@@ -1521,7 +1520,7 @@ window.timeline = {};
     // Calculate stats for a bundle
     //-------------------------------------------------------------------
     function calc_bundle_stats(bundle) {
-        var itype_to_int = {radical:0, kanji:1, vocabulary:2};
+        var itype_to_int = {radical:0, kanji:1, vocabulary:2, kana_vocabulary:2};
         var itype_to_class = {radical:'rad', kanji:'kan', vocabulary:'voc', kana_vocabulary:'voc'};
         var srs_to_class = {
             curr: ['appr','appr','appr','appr','appr','guru','guru','mast','enli'],
@@ -1581,7 +1580,7 @@ window.timeline = {};
             bundle_by_timeslot();
             update_slider_reviews();
             draw_timeline();
-            start_refresh_timer();
+            running_timeout = start_refresh_timer();
         }, wait_time);
     }
 
